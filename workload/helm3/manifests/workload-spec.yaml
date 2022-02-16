@@ -1,6 +1,6 @@
 name: apache-app
 namespace: wordpress-ns
-project: Vijayproject
+project: vijayproject
 type: Helm3
 clusters: "test-mks"
 payload: "./apache-8.0.0-rafay.tgz"
