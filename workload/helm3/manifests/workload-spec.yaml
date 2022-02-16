@@ -1,5 +1,5 @@
 name: apache-app
-namespace: wordpress-ns
+namespace: vijayns1
 project: vijayproject
 type: Helm3
 clusters: "test-mks"
