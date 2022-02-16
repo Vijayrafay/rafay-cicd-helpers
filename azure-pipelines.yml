@@ -52,6 +52,11 @@ steps:
     export RCTL_REST_ENDPOINT=$(RCTL_REST_ENDPOINT)
     export RCTL_OPS_ENDPOINT=$(RCTL_OPS_ENDPOINT)
     wget -O ${HOME}/rctl-linux-amd64.tar.bz2 https://s3-us-west-2.amazonaws.com/rafay-prod-cli/publish/rctl-linux-amd64.tar.bz2
+    echo $(RCTL_PROFILE) 
+    echo $(RCTL_API_KEY) 
+    echo $(RCTL_API_SECRET)
+    echo $(RCTL_PROJECT)
+    echo $(RCTL_REST_ENDPOINT)
     tar -C ${HOME} -xf ${HOME}/rctl-linux-amd64.tar.bz2
     set +e
     `sudo sed "s/%ns_name%/$(namespace)/g; s/%cluster_name%/$(cluster)/g" $(create_ns_yaml)  > create_ns.yaml`
