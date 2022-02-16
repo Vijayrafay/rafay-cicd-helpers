@@ -1,5 +1,5 @@
 name: apache-app
-namespace: vijayns2
+namespace: vijayns10
 project: vijayproject
 type: Helm3
 clusters: "test-mks"
