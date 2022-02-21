@@ -34,21 +34,15 @@ steps:
 - script: |
     
     export RCTL_API_KEY=$(RCTL_API_KEY)
-    echo "KEY $(RCTL_API_KEY)"
     export RCTL_PROFILE=$(RCTL_PROFILE)
     export RCTL_API_SECRET=$(RCTL_API_SECRET)
-    echo "Secret $(RCTL_API_SECRET)"
     export RCTL_PROJECT=$(RCTL_PROJECT)
-    echo "Project $(RCTL_PROJECT)"
-
 
     wget -O ${HOME}/rctl-linux-amd64.tar.bz2 https://s3-us-west-2.amazonaws.com/rafay-prod-cli/publish/rctl-linux-amd64.tar.bz2
     tar -C ${HOME} -xf ${HOME}/rctl-linux-amd64.tar.bz2
     set +e
     `sudo sed "s/%ns_name%/$(NAMESPACE)/g; s/%cluster_name%/$(CLUSTER)/g" $(create_ns_yaml)  > create_ns.yaml`
-    cat create_ns.yaml
     `sudo sed -i 's/%workload%/$(WORKLOAD)/g; s/%ns_name%/$(NAMESPACE)/g; s/%project_name%/$(RCTL_PROJECT)/g; s/%cluster_name%/$(CLUSTER)/g; s|%'payload_package'%|$(PAYLOAD)|g; s|%'payload_values'%|$(VALUES)|g' $(workload_yaml)`
-    cat $(workload_yaml)
     chmod 777 ${HOME}/rctl
     echo "Rafay Binary has been pulled and saved successfully on Agent machine"
     ${HOME}/rctl get cluster | awk {'print $2'}| grep -v NAME | awk '!/^$/' > /tmp/getcluster.out
@@ -59,17 +53,32 @@ steps:
       exit 0
     fi
     rm /tmp/getcluster.out 
+
     ${HOME}/rctl get namespace | awk {'print $2'}| grep -v NAME | awk '!/^$/' > /tmp/getns.out
     grep -i $(namespace) /tmp/getns.out > /dev/null 2>&1
     if [ $? -eq 1 ]; then
       ${HOME}/rctl create ns -f create_ns.yaml
-      sleep 25
+      sleep 5
       ${HOME}/rctl publish ns $(namespace)
-      sleep 10
+      namespace_status="Not Ready"
+      namespace_status_iterations=1
+      while [ "$namespace_status" != "false" ];
+      do
+        sleep 5  
+        namespace_status=`${HOME}/rctl status namespace $(namespace) | awk '{print $6}'| grep -v "PUBLISHPENDING" |  awk '!/^$/'`
+        if [[ "$namespace_status" = "true"  &&  $namespace_status_iterations -eq 10 ]];then
+          echo "$(namespace) creation has been Failed"
+          exit 0
+        fi
+        echo "$namespace_status"
+        namespace_status_iterations=$((namespace_status_iterations+1))
+      done
+      echo "Namespace $(namespace) has been published successfully"
     else
       echo "Namespace $(namespace) is already exists"
     fi
     rm /tmp/getns.out
+    sleep 10
     ${HOME}/rctl create workload $(workload_yaml)
     if [ $? -eq 1 ];
     then
